@@ -1,0 +1,215 @@
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+
+import com.gargoylesoftware.htmlunit.WebWindow;
+import com.thoughtworks.selenium.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+
+
+
+import static org.junit.Assert.*;
+
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
+
+import jxl.Cell;
+import jxl.Sheet;
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+import jxl.write.DateTime;
+import jxl.write.Label;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
+import jxl.write.biff.RowsExceededException;
+
+public class seltest {
+	private Selenium selenium;
+	private String inputFile;
+	
+	public void captureScreen() throws Exception 
+	{     //int i = 0;
+		
+		String ext="png";
+		File dir=new File("D:\\images"); 
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();  
+		Rectangle screenRectangle = new Rectangle(screenSize);   
+		Robot robot = new Robot();   
+		BufferedImage image = robot.createScreenCapture(screenRectangle); 
+		String name = String.format("%s.%s", RandomStringUtils.randomAlphanumeric(8), ext);
+        ImageIO.write(image, "png", new File(dir,name)); 
+		
+	} 
+	
+	@Before
+	
+	public void setUp() throws Exception {
+		System.out.println("function started");
+		selenium = new DefaultSelenium("localhost", 1234,"*firefox", "http://www.singpost.com/");
+        selenium.start();
+	}
+
+	@Test
+	public void testUntitled() throws Exception {
+		int totalrows;
+		
+		int i=0;
+		int l=0;
+		File f=new File("D:\\Dhandapani\\works\\testdata.xls");
+		 Workbook w=Workbook.getWorkbook(f);
+		 Sheet s=w.getSheet(0);
+		
+		 totalrows = s.getRows();
+		 File exlFile = new File("D:\\Dhandapani\\works\\writedata.xls");
+		 WritableWorkbook writableWorkbook = Workbook
+                 .createWorkbook(exlFile);
+		 WritableSheet writableSheet = writableWorkbook.createSheet(
+                 "Sheet1", 0);
+         Label l1 = new Label(0, 0, "Country");
+         Label l2 = new Label(1, 0, "Weight");
+         Label l3 = new Label(2, 0, "Delivery time");
+         Label l4 = new Label(3, 0, "Postal Charges");
+         Label l5 = new Label(4, 0, "Delivery Method");
+         writableSheet.addCell(l1);
+         writableSheet.addCell(l2);
+         writableSheet.addCell(l3);
+         writableSheet.addCell(l4);
+         writableSheet.addCell(l5);
+		do	{
+			l=l+1;
+			
+			System.out.println(totalrows);
+			
+			
+				String country = s.getCell(0, i).getContents();
+				String weight = s.getCell(1, i).getContents();
+				String dtime = s.getCell(2,i).getContents();
+				
+			    
+			    selenium.open("/");
+			  //  selenium.windowFocus();
+			    
+				selenium.windowMaximize();
+				captureScreen();
+				
+selenium.windowFocus();
+
+	//	selenium.click("css=a.close > span");
+		selenium.getEval("window.scrollTo(250,250)");
+		captureScreen();
+		selenium.select("id=country_code", country);
+		captureScreen();
+		selenium.click("id=weight");
+		selenium.type("id=weight", weight);
+		captureScreen();
+		selenium.click("id=delivery_time");
+		selenium.select("id=delivery_time", dtime);
+		captureScreen();
+		selenium.click("id=btn_submit_calculate");
+		captureScreen();
+		selenium.waitForPageToLoad("30000");
+		assertTrue(selenium.isTextPresent("Postage Charge Information"));
+		selenium.getEval("window.scrollTo(250,250)");
+		captureScreen();
+		System.out.println("Text found");
+		selenium.getEval("window.scrollTo(250,250)");
+		captureScreen();
+
+		String C1 = selenium.getText("css=#calResult > p");
+		System.out.println(C1);
+		String W1 = selenium.getText("xpath=//div[@id='calResult']/p[2]");
+		System.out.println(W1);
+		String dT = selenium.getText("xpath=//table[@id='GridView1']/tbody/tr/td[2]/font");
+		System.out.println(dT);
+		String amount = selenium.getText("xpath=//table[@id='GridView1']/tbody/tr/td[3]/font");
+		System.out.println(amount);
+		
+		String dM = selenium.getText("xpath=//*[@id='GridView1_ctl02_HyperLink1']/font/text()");
+		System.out.println(dM);
+
+	
+		
+		try {
+			 //Create Cells with contents of different data types.
+            //Also specify the Cell coordinates in the constructor
+			 
+	         
+	        
+	         //Add the created Cells to the sheet
+		
+            Label label1 = new Label(0, l, C1);
+            Label label2 = new Label(1, l, W1);
+            Label label3 = new Label(2, l, dT);
+            Label label4 = new Label(3, l, amount);
+            Label label5 = new Label(4, l, dM);
+            
+            //Add the created Cells to the sheet
+            writableSheet.addCell(label1);
+            writableSheet.addCell(label2);
+            writableSheet.addCell(label3);
+            writableSheet.addCell(label4);
+            writableSheet.addCell(label5);
+       
+            
+		
+            //Write and close the workbook
+        
+            
+            
+          
+
+ 
+        } catch (RowsExceededException e) {
+            e.printStackTrace();
+        } catch (WriteException e) {
+            e.printStackTrace();
+        }
+    
+		
+		  
+		
+		i=i+1;
+	//	System.out.println(i);
+		selenium.deleteAllVisibleCookies();
+	
+		System.out.println("Finished");
+	
+			}while(i<totalrows);
+		
+		writableWorkbook.write();
+        writableWorkbook.close();
+		
+		
+		
+		
+				
+	}	
+	
+	
+	@After
+	public void tearDown() throws Exception {
+		
+		
+		selenium.stop();
+		
+	}
+	
+	
+}
